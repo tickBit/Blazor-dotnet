@@ -1,0 +1,175 @@
+@page "/infos"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Note_taking_demo.Models
+@using Note_taking_demo.Services
+@using System.Security.Claims
+@using System.ComponentModel.DataAnnotations
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@inject InfoService InfoService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div class="mx-auto" style="width: 30em;">
+<h3>My notes</h3>
+
+<EditForm Model="@newInfo" OnValidSubmit="AddInfo">
+    <InputText class="form-control" @bind-Value="newInfo.Content" />
+    <button class="btn btn-primary mt-2">Add note</button>
+</EditForm>
+</div>
+
+<hr />
+
+@if (infos is null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="mx-auto" style="width: 30em;">
+    <ul class="list-group">
+        @foreach (var info in infos)
+        {
+            <li @key="info.Id" class="list-group-item">
+                @if (info.Id == editingId)
+                {
+                    <input type="text" class="form-control" 
+                        value="@editText" 
+                        @oninput="(e => editText = e.Value?.ToString() ?? string.Empty)"
+                        @ref="inputRef"
+                        @onkeydown="@(e => OnKeyDown(e, info))" />
+
+                }
+                else
+                {
+                    @info.Note
+                    <div class="float-end">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27"  onclick="@(() => HandleEdit(info.Id))" class="edit"><path fill="currentColor" d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83l3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" viewBox="0 0 27 27" onclick="@(() => HandleDelete(info.Id))" class="delete"><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="m18 9l-.84 8.398c-.127 1.273-.19 1.909-.48 2.39a2.5 2.5 0 0 1-1.075.973C15.098 21 14.46 21 13.18 21h-2.36c-1.279 0-1.918 0-2.425-.24a2.5 2.5 0 0 1-1.076-.973c-.288-.48-.352-1.116-.48-2.389L6 9m7.5 6.5v-5m-3 5v-5m-6-4h4.615m0 0l.386-2.672c.112-.486.516-.828.98-.828h3.038c.464 0 .867.342.98.828l.386 2.672m-5.77 0h5.77m0 0H19.5" /></svg>
+                    </div>
+                }
+            
+            </li>
+        }
+    </ul>
+    </div>
+}
+
+@code {
+
+    [Parameter] public int InfoId { get; set; }
+
+    [Parameter] public EventCallback<int> OnDeleted { get; set; }
+    
+    [Parameter] public EventCallback<int> OnEdited { get; set; }
+    
+    List<Info>? infos;
+    
+    
+
+    int? editingId;
+    string editText = "";
+    ElementReference inputRef;
+
+    private NewInfoModel newInfo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userId = int.Parse(
+            user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        infos = await InfoService.GetForUserAsync(userId);
+    }
+
+    private async Task AddInfo()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = int.Parse(
+            authState.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        await InfoService.AddAsync(userId, newInfo.Content);
+        infos = await InfoService.GetForUserAsync(userId);
+        newInfo.Content = string.Empty;
+    }
+
+    private class NewInfoModel
+    {
+        [Required]
+        public string Content { get; set; } = string.Empty;
+    }
+
+    private async Task HandleEdit(int id)
+    {
+        editingId = id;
+        editText = infos?.FirstOrDefault(i => i.Id == id)?.Note ?? string.Empty;
+        
+        // ensure re-render on the Blazor renderer thread
+        await InvokeAsync(StateHasChanged);
+        
+        await OnEdited.InvokeAsync(id);
+        await Task.Yield();
+        await inputRef.FocusAsync();
+        
+        
+    }
+    
+
+    private async Task HandleDelete(int id)
+    {
+        await deleteNote(id);
+        
+        // remove locally so UI updates immediately
+        if (infos is not null)
+        {
+            infos.RemoveAll(i => i.Id == id);
+        }
+
+        // ensure re-render on the Blazor renderer thread
+        await InvokeAsync(StateHasChanged);
+        
+        await OnDeleted.InvokeAsync(id);
+    }
+    
+    private async Task deleteNote(int infoId)
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = int.Parse(
+            authState.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var success = await InfoService.DeleteAsync(infoId, userId);
+        if (success)
+        {
+            infos = await InfoService.GetForUserAsync(userId);
+        }
+             
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e, Info info)
+    {
+        if (e.Key == "Enter")
+        {
+            await SaveEdit(info);
+        }
+        else if (e.Key == "Escape")
+        {
+            editingId = null;
+        }
+    }
+
+    private async Task SaveEdit(Info info)
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = int.Parse(
+            authState.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        info.Note = editText;
+        await InfoService.UpdateAsync(info.Id, info.Note, userId);
+        editingId = null;
+    }
+    
+}

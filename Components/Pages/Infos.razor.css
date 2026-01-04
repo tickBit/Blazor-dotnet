@@ -1,0 +1,13 @@
+.delete {
+    cursor: pointer;
+    color: red;
+}
+
+.edit {
+    cursor: pointer;
+    color: green;
+}
+
+.float-end {
+    float: right;
+}

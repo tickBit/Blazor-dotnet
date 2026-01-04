@@ -1,0 +1,64 @@
+@page "/login"
+@rendermode InteractiveServer
+
+<PageTitle>Login</PageTitle>
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.SignalR
+@using Note_taking_demo.Data
+@using Note_taking_demo.Models
+@using Note_taking_demo.Services
+@using System.Security.Claims
+
+@inject UserService UserService
+
+<h3>Login</h3>
+
+@if (!HasError && string.IsNullOrEmpty(Error) == false)
+{
+    <div class="alert alert-success mt-3">
+        Login succesfull!
+    </div>
+} else if (string.IsNullOrEmpty(Error) == true)
+{
+    <div class="alert alert-info mt-3">
+        Fill the form below to login.
+    </div>
+} else if (string.IsNullOrEmpty(Error) == false)
+{
+    <div class="alert alert-danger mt-3">
+        Login failed: @Error
+    </div>
+}
+
+<div class="mx-auto" style="width: 20em;">
+
+    <form method="post" action="/auth/login">
+    <div class="mb-3">
+        <label class="form-label mx-auto">Email</label>
+        <input name="email"
+               class="form-control"
+               required />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input name="password"
+               type="password"
+               class="form-control"
+               required />
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        Login
+    </button>
+    
+    </form>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    private bool HasError => Error == "1";
+}

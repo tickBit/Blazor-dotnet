@@ -1,0 +1,53 @@
+@page "/register"
+@rendermode InteractiveServer
+
+<PageTitle>Register</PageTitle>
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.SignalR
+@using Note_taking_demo.Data
+@using Note_taking_demo.Services
+
+@inject UserService UserService
+
+<h3>User registration</h3>
+
+@if (string.IsNullOrEmpty(Error))
+{
+    <div class="alert alert-info mt-3">
+        Fill the form below to register.
+    </div>
+} else if (string.IsNullOrEmpty(Error) == false)
+{
+    <div class="alert alert-danger mt-3">
+        Registration failed: @Error
+    </div>
+}
+
+
+<form method="post" action="/auth/register">
+    <div class="mb-3">
+        <label>Email</label>
+        <input name="email" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Password</label>
+        <input name="password" type="password" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label>Confirm Password</label>
+        <input name="confirmPassword" type="password" class="form-control" required />
+    </div>
+    
+    <button type="submit" class="btn btn-primary">
+        Register
+    </button>
+</form>
+
+@code {
+    [SupplyParameterFromQuery(Name = "error")]
+    public string? Error { get; set; }
+
+    private bool HasError => Error != null;
+}
