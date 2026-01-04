@@ -155,6 +155,38 @@ app.MapPost("/auth/register", async (
     return Results.Redirect("/infos");
 });
 
+app.MapPost("/auth/delete-account", async (
+    HttpContext httpContext,
+    AppDbContext db) =>
+{
+    var user = httpContext.User;
+
+    var idClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+    if (idClaim == null)
+    {
+        return Results.Redirect("/login");
+    }
+
+    int userId = int.Parse(idClaim.Value);
+
+    var dbUser = await db.Users.FindAsync(userId);
+    if (dbUser == null)
+    {
+        return Results.Redirect("/login");
+    }
+
+    // Delete user from database
+    db.Users.Remove(dbUser);
+    await db.SaveChangesAsync();
+
+
+    // Log out
+    await httpContext.SignOutAsync(
+        CookieAuthenticationDefaults.AuthenticationScheme);
+
+    return Results.Redirect("/");
+});
+
 app.Run();
 
 static bool verifyPassword(string password, string storedHash)
