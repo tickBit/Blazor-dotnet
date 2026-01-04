@@ -6,7 +6,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject AuthenticationStateProvider AuthStateProvider
 
-<h3>Profile</h3>
+<h3>The Profile</h3>
 
 @if (userEmail is null)
 {
@@ -21,15 +21,64 @@ else
                 @userEmail
             </p>
 
-            <form method="post" action="/auth/delete-account"
-                  onsubmit="return confirm('Are you sure, you want delete your account? This action cannot be undone.');">
-                <button type="submit" class="btn btn-danger">
-                    Delete my account
-                </button>
-            </form>
+            <!-- The button opens a modal -->
+            <button type="button"
+                    class="btn btn-danger"
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteAccountModal">
+                Delete Account
+            </button>
         </div>
     </div>
 }
+
+<!-- MODAL -->
+<div class="modal fade"
+     id="deleteAccountModal"
+     tabindex="-1"
+     aria-labelledby="deleteAccountLabel"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteAccountLabel">
+                    Confirm Account Deletion
+                </h5>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to delete your account?
+                </p>
+                <p class="text-danger">
+                    This action is irreversible and will remove all your notes.
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancel
+                </button>
+
+                <form method="post" action="/auth/delete-account">
+                    <button type="submit"
+                            class="btn btn-danger">
+                        Delete Account
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
 
 @code {
     private string? userEmail;
