@@ -6,7 +6,7 @@ My first Blazor app.
 - logged in user can add, edit and view his/her notes
 - user can delete his/her profile, a Bootstrap Modal is used to confirm the action
 
-## Instruction - how to run
+## Instructions - how to run
 
 - For the first time:
   - install dependencies: `dotnet restore`
@@ -14,3 +14,10 @@ My first Blazor app.
 
 - Run the app:
   - `dotnet run`
+ 
+## Picture
+
+![Blazor-editing](https://github.com/user-attachments/assets/e866cda8-b317-48b4-8d67-ad54d97cc317)
+
+Editing existing note
+
