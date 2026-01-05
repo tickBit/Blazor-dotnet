@@ -73,7 +73,7 @@ app.MapPost("/auth/login", async (
 
     if (user == null || !verifyPassword(password, user.PasswordHash))
     {
-        return Results.Redirect("/login?error=1");
+        return Results.Redirect("/login?error=invalid%20credentials");
     }
 
     var claims = new List<Claim>

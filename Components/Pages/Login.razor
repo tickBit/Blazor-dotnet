@@ -60,5 +60,5 @@
     [SupplyParameterFromQuery(Name = "error")]
     public string? Error { get; set; }
 
-    private bool HasError => Error == "1";
+    private bool HasError => Error != null;
 }
