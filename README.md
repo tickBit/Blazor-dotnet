@@ -17,7 +17,7 @@ My first Blazor app.
  
 ## Picture
 
-![Blazor-editing](https://github.com/user-attachments/assets/e866cda8-b317-48b4-8d67-ad54d97cc317)
+![Blazor-custom-pagination](https://github.com/user-attachments/assets/801c6c99-b1b5-4f24-8462-8b1921a9b9e5)
 
-Editing existing note
+Custom pagination (not built in Paginator)
 
