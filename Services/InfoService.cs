@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Note_taking_demo.Data;
 using Note_taking_demo.Models;
-using System.Security.Claims;
+using Microsoft.ServiceFabric.Actors.Query;
 
 namespace Note_taking_demo.Services;
 
@@ -14,13 +14,22 @@ public class InfoService
         _db = db;
     }
 
-    public async Task<List<Info>> GetForUserAsync(int userId)
+    public async Task<List<Info>> GetForUserAsync(int userId, int page = 1, int pageSize = 4)
     {
+        if (page < 1)
+            page = 1;
+
+        var skip = (page - 1) * pageSize;
+
         return await _db.Infos
             .Where(i => i.UserId == userId)
-            .OrderByDescending(i => i.Id)
+            .OrderByDescending(i => i.Id) // tai CreatedAt
+            .Skip(skip)
+            .Take(pageSize)
+            .AsNoTracking()
             .ToListAsync();
     }
+
 
     public async Task AddAsync(int userId, string content)
     {

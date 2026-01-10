@@ -5,6 +5,7 @@
 @using Note_taking_demo.Services
 @using System.Security.Claims
 @using System.ComponentModel.DataAnnotations
+
 @rendermode InteractiveServer
 @attribute [Authorize]
 
@@ -54,6 +55,21 @@ else
             </li>
         }
     </ul>
+    
+    <div class="d-flex justify-content-between mt-3">
+        <button class="btn btn-secondary"
+                disabled="@(!hasPreviousPage)"
+                @onclick="PreviousPage">
+            Previous
+        </button>
+
+        <button class="btn btn-secondary"
+                disabled="@(!hasNextPage)"
+                @onclick="NextPage">
+            Next
+        </button>
+    </div>
+
     </div>
 }
 
@@ -73,17 +89,49 @@ else
     string editText = "";
     ElementReference inputRef;
 
+    int page = 1;
+    const int pageSize = 4;
+
+    bool hasNextPage;
+    bool hasPreviousPage => page > 1;
+    
     private NewInfoModel newInfo = new();
+
+    private async Task NextPage()
+    {
+        if (!hasNextPage)
+            return;
+
+        page++;
+        
+        await LoadInfosAsync();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (page <= 1)
+            return;
+
+        page--;
+        await LoadInfosAsync();
+    }
+
+    private async Task LoadInfosAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = int.Parse(
+            authState.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+        var result = await InfoService.GetForUserAsync(userId, page, pageSize);
+
+        infos = result;
+
+        hasNextPage = result.Count == pageSize;
+    }
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        var userId = int.Parse(
-            user.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-
-        infos = await InfoService.GetForUserAsync(userId);
+        await LoadInfosAsync();
     }
 
     private async Task AddInfo()
@@ -92,9 +140,12 @@ else
         var userId = int.Parse(
             authState.User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
+        page = 1;   // go to page 1 after new entry
         await InfoService.AddAsync(userId, newInfo.Content);
-        infos = await InfoService.GetForUserAsync(userId);
+        infos = await InfoService.GetForUserAsync(userId, page, pageSize);
         newInfo.Content = string.Empty;
+        
+        hasNextPage = infos.Count == pageSize;
     }
 
     private class NewInfoModel
@@ -127,7 +178,13 @@ else
         if (infos is not null)
         {
             infos.RemoveAll(i => i.Id == id);
+            
+            if (infos.Count == 0 && page > 1)
+            {
+                page--;
+            }
         }
+
 
         // ensure re-render on the Blazor renderer thread
         await InvokeAsync(StateHasChanged);
