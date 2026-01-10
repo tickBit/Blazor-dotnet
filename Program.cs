@@ -71,7 +71,7 @@ app.MapPost("/auth/login", async (
     var user = await db.Users
         .SingleOrDefaultAsync(u => u.Email == email);
 
-    if (user == null || !verifyPassword(password, user.PasswordHash))
+    if (user == null || !PasswordHasher.VerifyPassword(password, user.PasswordHash))
     {
         return Results.Redirect("/login?error=invalid%20credentials");
     }
@@ -188,24 +188,3 @@ app.MapPost("/auth/delete-account", async (
 });
 
 app.Run();
-
-static bool verifyPassword(string password, string storedHash)
-{
-    var parts = storedHash.Split(':');
-    if (parts.Length != 2)
-    {
-        return false;
-    }
-
-    var salt = Convert.FromBase64String(parts[0]);
-    var hash = Convert.FromBase64String(parts[1]);
-
-    var hashToCompare = Rfc2898DeriveBytes.Pbkdf2(
-        password,
-        salt,
-        iterations: 100_000,
-        HashAlgorithmName.SHA256,
-        outputLength: 32);
-
-    return CryptographicOperations.FixedTimeEquals(hash, hashToCompare);
-}
