@@ -3,7 +3,7 @@
 My first Blazor app.
 
 - users can be registered to users
-- logged in user can add, edit and view his/her notes
+- logged in user can add, edit, delete and view his/her notes
 - user can delete his/her profile, a Bootstrap Modal is used to confirm the action
 - pagination implemented (4 notes / page)
 
