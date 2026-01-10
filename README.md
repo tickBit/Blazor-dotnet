@@ -19,5 +19,5 @@ My first Blazor app.
 
 ![Blazor-custom-pagination](https://github.com/user-attachments/assets/801c6c99-b1b5-4f24-8462-8b1921a9b9e5)
 
-Custom pagination (not built in Paginator)
+Custom pagination (not built-in Paginator)
 
